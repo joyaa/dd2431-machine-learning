@@ -31,7 +31,7 @@ for monk in monkTrainingSets:	#for each data set
 	att=[]
 
 "--Answer to Assignment 2"
-print(informationGain[2], "\n")
+print(informationGain[2 	], "\n")
 
 #print(t.bestAttribute(m.monk1, m.attributes))
 
@@ -64,28 +64,28 @@ tree1 = t.buildTree(m.monk1, m.attributes)
 tree2 = t.buildTree(m.monk2, m.attributes)
 tree3 = t.buildTree(m.monk3, m.attributes)
 
-#draw.drawTree(tree1)
+draw.drawTree(tree1)
 #draw.drawTree(tree2)
 #draw.drawTree(tree3)
 
 print("Assignment 3: Decision tree performances")
 
 print("Train errors:")
-print(round(t.check(tree1, m.monk1),5))
-print(round(t.check(tree2, m.monk2),5))
-print(round(t.check(tree3, m.monk3),5))
+print(1-round(t.check(tree1, m.monk1),5))
+print(1-round(t.check(tree2, m.monk2),5))
+print(1-round(t.check(tree3, m.monk3),5))
 
 print("Test errors:")
-print(round(t.check(tree1, m.monk1test),5))
-print(round(t.check(tree2, m.monk2test),5))
-print(round(t.check(tree3, m.monk3test),5), "\n")
+print(round(1-t.check(tree1, m.monk1test),5))
+print(round(1-t.check(tree2, m.monk2test),5))
+print(round(1-t.check(tree3, m.monk3test),5), "\n")
 
 #print(t.mostCommon(t.select(sel[3],m.attributes[0],3)));
 
 "6 PRUNING"
 def partition(data, fraction):
 	ldata = list(data)
-	#random.shuffle(ldata)
+	random.shuffle(ldata)
 	breakPoint = int(len(ldata) * fraction)
 	return ldata[:breakPoint], ldata[breakPoint:]
 
