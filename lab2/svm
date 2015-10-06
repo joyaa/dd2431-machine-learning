@@ -6,7 +6,7 @@ import numpy as np, pylab, random, math
 def main(kernelType):
 	
 	data = generateData()
-	P = buildMatrix(data)
+	P = buildMatrix(data,kernelType)
 	qhG = createVectors(len(P)) #vectors q & h, matrix G
 
 	r = qp(matrix(P), matrix(qhG[0]), matrix(qhG[2]), matrix(qhG[1]))
@@ -17,10 +17,10 @@ def main(kernelType):
 
 	boundaryPlot()
 
-def indicator(x, y):
+def indicator(x, y, k):
 	Sum = 0
 	for point in nonzeroAlphas:
-		Sum += point[3]*point[2]*kernel((x, y),(point[0], point[1]))
+		Sum += point[3]*point[2]*kernel((x, y),(point[0], point[1]), k)
 	return Sum
 
 def nonzero(alphaList, datapoints):
@@ -29,31 +29,34 @@ def nonzero(alphaList, datapoints):
 	i = 0
 	for alpha in alphaList:
 		if alpha > 1e-5:
-			print(datapoints[i])
-			print(alpha)
 			nonzeros.append(datapoints[i] + (alpha,))
 		i += 1
 	return nonzeros
 
-def kernel(x, y): #takes two vectors x and y
-	#if k == 1:
-	return np.dot(x, y) + 1 #add 1 for bias
+def kernel(x, y,kernelType): #takes two vectors x and y
 
-	#if k == 2:
-	#return (np.dot(x, y) + 1)**2
+	if kernelType == 1:
+		return np.dot(x, y) + 1 #add 1 for bias
 
-	#if k == 3:
-	#sigma = 1
-	#return exp(-((x-y)**2)/(2*sigma**2))
+	elif kernelType == 2:
+		return (np.dot(x, y) + 1)**2
 
-	#if k == 4:
-	#k = 1
-	#delta = 1
-	#return tanh(k*np.dot(x, y)-delta)) #dot prod first ??
+	elif kernelType == 3:
+		sigma = 1
+		length = np.linalg.norm(np.subtract(x,y),2)
+		return math.exp(-1*np.power(length,2)/(2*sigma))
+
+	elif kernelType == 4:
+		k = 1
+		delta = 1
+		return math.tanh(k*np.dot(x, y)-delta) #dot prod first ??
+	else:
+		return 1
+
 
 def createVectors(length):
 	q = -np.ones(length)
-	h = np.ones(length)
+	h = np.zeros(length)
 	G = -np.identity(length)
 	return [q,h,G]
 
@@ -62,38 +65,34 @@ def generateData():
 	classA = 	[(random.normalvariate(-1.5, 1),
 				  random.normalvariate(0.5, 1),
 				  1.0)
-				 for i in range(5)] + \
+				 for i in range(50)] + \
 				[(random.normalvariate(1.5, 1),
 				  random.normalvariate(0.5, 1),
 				  1.0)
-				for i in range(5)]
+				for i in range(50)]
 
 	classB = 	[(random.normalvariate(0.0, 0.5),
 		  		  random.normalvariate(-0.5, 0.5),
 				  -1.0)
-			 	for i in range(10)]
+			 	for i in range(100)]
 	
 	tempData = classA + classB
 	random.shuffle(tempData)
 
-	#plotData(classA, classB)
+	plotData(classA, classB)
 
 	return tempData
 
 def plotData(classA,classB):
 
 	pylab.hold(True)
-	pylab.plot( [p[0] for p in classA],
-				[p[1] for p in classA],
-				'bo')
+	pylab.plot( [p[0] for p in classA], [p[1] for p in classA], 'bo')
 
-	pylab.plot( [p[0] for p in classB],
-				[p[1] for p in classB],
-				'ro')
+	pylab.plot( [p[0] for p in classB],	[p[1] for p in classB],	'ro')
 	#pylab.show()
 
 
-def buildMatrix(data):
+def buildMatrix(data, kernelType):
 	tempP = np.zeros(shape=(len(data),len(data)))
 	i=0
 
@@ -101,8 +100,8 @@ def buildMatrix(data):
 		j=0
 
 		for y in data: 
-						
-			tempP[i,j] = x[2]*y[2]*kernel((x[0], x[1]), (y[0], y[1]))
+					
+			tempP[i,j] = x[2]*y[2]*kernel((x[0], x[1]), (y[0], y[1]), kernelType)
 			j += 1
 		
 		i += 1	
@@ -112,20 +111,14 @@ def buildMatrix(data):
 
 def boundaryPlot():
 
-
-
 	xrange = np.arange(-4, 4, 0.05)
 	yrange = np.arange(-4, 4, 0.05)
 
-	grid = matrix([[indicator(x, y)
-					for y in yrange]
-				    for x in xrange])
+	grid = matrix([[indicator(x, y, k) for y in yrange] for x in xrange])
 
-	pylab.contour(xrange, yrange, grid, 
-					(-1.0, 0.0, 1.0), 
-					colors=('red', 'black', 'blue'),
-					linewidths=(1,3,1))
+	pylab.contour(xrange, yrange, grid, (-1.0, 0.0, 1.0), colors=('red', 'black', 'blue'), linewidths=(1,3,1))
+	
 	pylab.show()
 
-k = raw_input("Choose kernel type 1: Linear, 2: Polynomial, 3: Radial Basis, 4: Sigmoid \n")
+k = int(raw_input("Choose kernel type 1: Linear, 2: Polynomial, 3: Radial Basis, 4: Sigmoid \n"))
 main(k)
