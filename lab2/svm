@@ -101,7 +101,7 @@ def plotData(classA,classB):
 	pylab.hold(True)
 	pylab.plot( [p[0] for p in classA], [p[1] for p in classA], 'bo')
 
-	pylab.plot( [p[0] for p in classB],	[p[1] for p in classB],	'ro')
+	pylab.plot( [p[0] for p in classB],	[p[1] for p in classB],	'rx')
 	#pylab.show()
 
 
