@@ -1,14 +1,16 @@
 from cvxopt.solvers import qp
 from cvxopt.base import matrix
+from numpy.linalg import matrix_rank
 
 import numpy as np, pylab, random, math
 
 def main(kernelType):
-	
 	data = generateData()
 	P = buildMatrix(data,kernelType)
 	qhG = createVectors(len(P)) #vectors q & h, matrix G
-
+	# print(P)
+	# print("rankP")
+	# print(matrix_rank(P))
 	r = qp(matrix(P), matrix(qhG[0]), matrix(qhG[2]), matrix(qhG[1]))
 	alpha = list(r['x'])	
 
@@ -39,25 +41,36 @@ def kernel(x, y,kernelType): #takes two vectors x and y
 		return np.dot(x, y) + 1 #add 1 for bias
 
 	elif kernelType == 2:
-		return (np.dot(x, y) + 1)**2
+		degree = 3
+		return (np.dot(x, y) + 1)**degree
 
 	elif kernelType == 3:
-		sigma = 1
+		sigma = 0.1
 		length = np.linalg.norm(np.subtract(x,y),2)
 		return math.exp(-1*np.power(length,2)/(2*sigma))
 
 	elif kernelType == 4:
-		k = 1
-		delta = 1
-		return math.tanh(k*np.dot(x, y)-delta) #dot prod first ??
+		k = 2
+		delta = 0.1
+		return math.tanh(k*np.dot(x, y)-delta) 
 	else:
 		return 1
 
 
 def createVectors(length):
+	slack = 1
 	q = -np.ones(length)
-	h = np.zeros(length)
 	G = -np.identity(length)
+
+	C = 0
+	if slack == 1:
+		C = 5	
+		np.append(G, np.ones(length))
+
+	h = C*np.ones(length)
+
+	print(G)
+	print(h)
 	return [q,h,G]
 
 def generateData():
@@ -65,16 +78,16 @@ def generateData():
 	classA = 	[(random.normalvariate(-1.5, 1),
 				  random.normalvariate(0.5, 1),
 				  1.0)
-				 for i in range(50)] + \
+				 for i in range(5)] + \
 				[(random.normalvariate(1.5, 1),
 				  random.normalvariate(0.5, 1),
 				  1.0)
-				for i in range(50)]
+				for i in range(5)]
 
-	classB = 	[(random.normalvariate(0.0, 0.5),
+	classB = 	[(random.normalvariate(0.5, 0.5),
 		  		  random.normalvariate(-0.5, 0.5),
 				  -1.0)
-			 	for i in range(100)]
+			 	for i in range(10)]
 	
 	tempData = classA + classB
 	random.shuffle(tempData)
@@ -95,19 +108,14 @@ def plotData(classA,classB):
 def buildMatrix(data, kernelType):
 	tempP = np.zeros(shape=(len(data),len(data)))
 	i=0
-
 	for x in data:
 		j=0
-
-		for y in data: 
-					
+		for y in data: 		
 			tempP[i,j] = x[2]*y[2]*kernel((x[0], x[1]), (y[0], y[1]), kernelType)
 			j += 1
 		
 		i += 1	
-
 	return tempP
-
 
 def boundaryPlot():
 
