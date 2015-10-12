@@ -48,9 +48,13 @@ def mlParams(X,labels,W=None):  #3.4 Assignment 1
             classV[labels[i]]=np.array([])
         np.append(classV[labels[i]],datapoint) 
         i += 1
+
+
     C = classV.size
-    mu = np.empty(C,d, dtype=object)
+    mu = np.empty([C,d], dtype=object)
     j=0
+
+    #mu
     for C in classV:
         features = np.empty(d, dtype=object)
         for point in C:
@@ -58,7 +62,7 @@ def mlParams(X,labels,W=None):  #3.4 Assignment 1
                 features[i] += point[i]    
         mu[j]=features
         j+=1
-
+    #sigma
     for
         
         for 
