@@ -32,6 +32,15 @@ from matplotlib.colors import ColorConverter
 def computePrior(labels,W=None):
     # Your code here
 
+    #kolla senare
+    prior=np.zeros(len(set(labels)))
+
+    for k in range(labels.size):
+        prior[int(labels[k])]+=W[k]
+
+    prior /= np.sum(W[k])
+
+            
     return prior
 
 # Note that you do not need to handle the W argument for this part
@@ -42,34 +51,42 @@ def computePrior(labels,W=None):
 def mlParams(X,labels,W=None):  #3.4 Assignment 1
     i = 0
     d = X[0].size
+    classes=set(labels)
+    C = len(classes)
 
-    for datapoint in X:
-        if len(classV)==0:
-            classV[labels[i]]=np.array([])
-        np.append(classV[labels[i]],datapoint) 
-        i += 1
+    mu = np.zeros([C,d], dtype=object)
+
+    #nytt försök
+    for k in range(C):
+        for i in range(d):
+
+            mu_k = 0
+            n_k = 0.0
+            for x in range(labels.size):
+                #W[x] added to n_k and mu_k
+                if labels[x] == k:
+                    mu_k += X[x][i]*W[x]
+                    n_k += W[x]             
+            mu[k][i] = mu_k/n_k
 
 
-    C = classV.size
-    mu = np.empty([C,d], dtype=object)
-    j=0
+    sigma = np.zeros([d,d,C])
 
-    #mu
-    for C in classV:
-        features = np.empty(d, dtype=object)
-        for point in C:
-            for i in range(0,d):
-                features[i] += point[i]    
-        mu[j]=features
-        j+=1
-    #sigma
-    for
+    for k in range(C):
+        n_k=0
+        for x in range(labels.size):
+            if labels[x]==k:
+                #W[x] added to n_k and sigma
+                n_k += W[x]
+                diff = np.subtract(X[x],mu[k])
+                sigma[:,:,k] = sigma[:,:,k]+W[x]*np.outer(diff,diff)
+                #for d1 in rangecl(diff.size):
+                #    for d2 in range(diff.size):
+                #        sigma[d1][d2][k] += diff[d1]*diff[d2]
         
-        for 
-            
-                for       
-
-
+        sigma[:,:,k] /= n_k 
+    #print np.shape(sigma)
+    #sigma
     return mu, sigma
 
 # in:      X - N x d matrix of M data points
@@ -79,10 +96,47 @@ def mlParams(X,labels,W=None):  #3.4 Assignment 1
 # out:     h - N x 1 class predictions for test points
 def classify(X,prior,mu,sigma,covdiag=True):
     # Your code here
-    # Example code for solving a psd system
-    # L = np.linalg.cholesky(A)
-    # y = np.linalg.solve(L,b)
-    # x = np.linalg.solve(L.H,y)
+
+    C = mu[:,0].size
+    N = X[:,0].size
+    delta=np.zeros(C)
+    h=np.zeros(N)
+    d = len(sigma[:,:,0])
+    
+    if covdiag:
+        for n in range(N):
+            maxDelta = 0
+            maxClass = 0
+            for k in range(C):  
+                diff=X[n]-mu[k]      
+                x = np.linalg.inv(np.diag(np.diag(sigma[:,:,k])))
+                lnDetSigma = np.log(np.linalg.det(sigma[:,:,k]))   
+                #print lnDetSigma,(np.transpose(diff)*x*diff) 
+                delta[k]=-0.5*lnDetSigma-0.5*np.dot(np.dot(diff,x),np.transpose(diff))+np.log(prior[k])
+                if delta[k]>maxDelta:
+                    maxDelta = delta[k]
+                    maxClass = k
+            h[n] = maxClass#np.where(delta,md) 
+
+    else:
+        for n in range(N):
+        # Example code for solving a psd system
+            maxDelta = 0
+            maxClass = 0
+            for k in range(C):
+                L = np.linalg.cholesky(sigma[:,:,k])
+                y = np.linalg.solve(L,np.transpose(X[n]-mu[k]))
+                x = np.linalg.solve(np.transpose(L),y)
+
+                lnDetSigma = 2*np.sum(np.log(np.diag(L)))
+
+                delta[k]=-0.5*lnDetSigma-0.5*np.dot((X[n]-mu[k]),x)+np.log(prior[k])
+                if delta[k]>maxDelta:
+                    maxDelta = delta[k]
+                    maxClass = k
+            h[n] = maxClass
+            #h[n] = np.where(delta,max(delta)) 
+    #print h 
     return h
 
 
@@ -91,8 +145,10 @@ def classify(X,prior,mu,sigma,covdiag=True):
 # Call `genBlobs` and `plotGaussian` to verify your estimates.
 
 X, labels = genBlobs(centers=5)
-mu, sigma = mlParams(X,labels)
-plotGaussian(X,labels,mu,sigma)
+W=np.ones(len(labels))/len(labels)
+mu, sigma = mlParams(X,labels,W)
+
+#plotGaussian(X,labels,mu,sigma)
 
 
 # ## Boosting functions to implement
@@ -108,6 +164,38 @@ plotGaussian(X,labels,mu,sigma)
 #      alphas - T x 1 vector of vote weights
 def trainBoost(X,labels,T=5,covdiag=True):
     # Your code here
+    C =len(set(labels))
+    d = len(X[0])
+    weights = np.ones(len(labels))/len(labels)
+    
+    priors = np.zeros([T,C])
+    mus = np.zeros([T,C,d])
+    sigmas = np.zeros([T,d,d,C])
+    alphas = np.zeros([T,C])
+    for i in range(T):
+        delta = np.zeros(len(labels))
+        prior = computePrior(labels,weights)
+        mu, sigma = mlParams(X,labels,weights)
+        h = classify(X,prior,mu,sigma,covdiag)
+        for j in range(len(labels)):
+            if h[j] == labels[j]:
+                delta[j]=1
+  
+        e=np.sum(np.dot(weights,(1-delta)))
+        alpha = 0.5*(np.log(1-e)-np.log(e))
+        for k in range(len(labels)):
+            if delta[k] == 1:
+                weights[k] *= np.exp(-alpha)
+            else:
+                weights[k] *= np.exp(alpha)
+        weights/=np.sum(weights)        
+        priors[i] = prior
+        mus[i] = mu
+        sigmas[i] = sigma
+        alphas[i] = alpha
+
+    #print np.shape(mus[0])
+
     return priors,mus,sigmas,alphas
 
 # in:       X - N x d matrix of N data points
@@ -118,7 +206,25 @@ def trainBoost(X,labels,T=5,covdiag=True):
 # out:  yPred - N x 1 class predictions for test points
 def classifyBoost(X,priors,mus,sigmas,alphas,covdiag=True):
     # Your code here
-    return c
+   
+    c=np.zeros(len(mus))
+    H=np.zeros(len(X))
+    #print np.shape(alphas)
+    C=len(mus[:,0]) #number of classes
+    for i in range(len(X)):
+        maxC=0
+        votes = np.zeros(C)
+        c=np.zeros(len(mus))
+        for j in range(C):
+            for k in range(len(mus)):  #T hypothesis
+                h = classify(np.atleast_2d(X[i]),priors[k],mus[k],sigmas[k],covdiag)
+                if j == h:
+                    votes[j]+=alphas[k][j]
+                    if votes[j] == max(votes):
+                        bestC = j
+
+        H[i] = bestC
+    return H
 
 
 # ## Define our testing function
@@ -158,7 +264,7 @@ def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covd
         ## Simple
             # Compute params
             prior = computePrior(yTr)
-            mu, sigma = mlParams(xTr,yTr)
+            mu, sigma = mlParams(xTr,yTr, np.ones(len(xTr)))#Added W for boosting
             # Predict
             yPr = classify(xTe,prior,mu,sigma,covdiag=covdiag)
 
@@ -195,7 +301,7 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
         ## Simple
         # Compute params
         prior = computePrior(yTr)
-        mu, sigma = mlParams(xTr,yTr)
+        mu, sigma = mlParams(xTr,yTr, np.ones(len(xTr))) #Added W for boosting
 
     xRange = np.arange(np.min(pX[:,0]),np.max(pX[:,0]),np.abs(np.max(pX[:,0])-np.min(pX[:,0]))/100.0)
     yRange = np.arange(np.min(pX[:,1]),np.max(pX[:,1]),np.abs(np.max(pX[:,1])-np.min(pX[:,1]))/100.0)
@@ -235,6 +341,9 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
 # Call the `testClassifier` and `plotBoundary` functions for this part.
 
 # Example usage of the functions
-
-testClassifier(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True)
-plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True)
+#dataset = raw_input("data,covdiag?: ")
+#covdiag = raw_input("covdiag?: ")
+#testClassifier(dataset=dataset,split=0.7,doboost=True,boostiter=5,covdiag=covdiag)
+#plotBoundary(dataset=dataset,split=0.7,doboost=True,boostiter=5,covdiag=covdiag)
+testClassifier(dataset='iris',split=0.7,doboost=True,boostiter=5,covdiag=False)
+plotBoundary(dataset='iris',split=0.7,doboost=True,boostiter=5,covdiag=False)
