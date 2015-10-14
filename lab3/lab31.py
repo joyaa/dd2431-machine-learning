@@ -33,18 +33,20 @@ warnings.filterwarnings('ignore')
 # in: labels - N x 1 vector of class labels
 # out: prior - C x 1 vector of class priors
 def computePrior(labels,W=None):
-    N = len(labels)
-    if W is None:
-        W=np.ones(N)
+    # Your code here
+    if W == None:
+        W=np.ones(len(labels))
 
+
+    #kolla senare
     prior=np.zeros(len(set(labels)))
 
-    for x in range(N):
-        prior[labels[x]]+=W[x]
+    for k in range(labels.size):
+        prior[int(labels[k])]+=W[k]
 
-    if W is None:
-       prior /= N
+    prior /= np.sum(W[k])
 
+            
     return prior
 
 # Note that you do not need to handle the W argument for this part
@@ -55,19 +57,19 @@ def computePrior(labels,W=None):
 def mlParams(X,labels,W=None):  #3.4 Assignment 1
     i = 0
     d = X[0].size
-    N = len(labels)
-    C = len(set(labels))
-    if W is None:
-        W=np.ones(N)
+    classes=set(labels)
+    C = len(classes)
+    if W == None:
+        W=np.ones(len(labels))
     mu = np.zeros([C,d], dtype=object)
 
-    #mu
+    #nytt försök
     for k in range(C):
         for i in range(d):
 
             mu_k = 0
             n_k = 0.0
-            for x in range(N):
+            for x in range(labels.size):
                 #W[x] added to n_k and mu_k
                 if labels[x] == k:
                     mu_k += X[x][i]*W[x]
@@ -79,18 +81,18 @@ def mlParams(X,labels,W=None):  #3.4 Assignment 1
 
     for k in range(C):
         n_k=0
-        for x in range(N):
+        for x in range(labels.size):
             if labels[x]==k:
                 #W[x] added to n_k and sigma
                 n_k += W[x]
                 diff = np.subtract(X[x],mu[k])
-                #for d1 in range(len(diff)):
-                #    for d2 in range(len(diff)):
-                #        sigma[d1][d2][k] += diff[d1]*diff[d2]                   
-                #sigma[:,:,k] = sigma[:,:,k]+W[x]*sigma[:,:,k]
-                sigma[:,:,k] = sigma[:,:,k]+W[x]*np.outer(np.transpose(diff),diff)
+                sigma[:,:,k] = sigma[:,:,k]+W[x]*np.outer(diff,diff)
+                #for d1 in rangecl(diff.size):
+                #    for d2 in range(diff.size):
+                #        sigma[d1][d2][k] += diff[d1]*diff[d2]
+        
         sigma[:,:,k] /= n_k 
-
+    #print np.shape(sigma)
     #sigma
     return mu, sigma
 
@@ -113,46 +115,35 @@ def classify(X,prior,mu,sigma,covdiag=True):
             maxDelta = 0
             maxClass = 0
             for k in range(C):  
-                diag = np.diag(np.diag(sigma[:,:,k]))
-                first = 0.5*np.log(np.linalg.det(diag))
-
-                diff=np.subtract(X[n],mu[k])
-                x = np.linalg.inv(diag) 
-                second = 0.5*np.dot(np.dot(diff,x),np.transpose(diff))
-             
-                third = np.log(prior[k])
-
-                delta[k]=-first-second+third
-                
-                if maxDelta is None or delta[k]>maxDelta :
+                diff=X[n]-mu[k]      
+                x = np.linalg.inv(np.diag(np.diag(sigma[:,:,k])))
+                lnDetSigma = np.log(np.linalg.det(sigma[:,:,k]))   
+                #print lnDetSigma,(np.transpose(diff)*x*diff) 
+                delta[k]=-0.5*lnDetSigma-0.5*np.dot(np.dot(diff,x),np.transpose(diff))+np.log(prior[k])
+                if delta[k]>maxDelta:
                     maxDelta = delta[k]
                     maxClass = k
-            h[n] = maxClass
+            h[n] = maxClass#np.where(delta,md) 
+
     else:
         for n in range(N):
         # Example code for solving a psd system
             maxDelta = 0
             maxClass = 0
             for k in range(C):
-                A = sigma[:,:,k]
-                b = np.transpose(X[n]-mu[k])
+                L = np.linalg.cholesky(sigma[:,:,k])
+                y = np.linalg.solve(L,np.transpose(X[n]-mu[k]))
+                x = np.linalg.solve(np.transpose(L),y)
 
-                L = np.linalg.cholesky(A)
-                y = np.linalg.solve(L,b)
-                
-                Lh = L.T.conj()
-                x = np.linalg.solve(Lh,y) #np.transpose(L)
+                lnDetSigma = 2*np.sum(np.log(np.diag(L)))
 
-                first = 0.5*2*np.sum(np.log(np.diag(L)))
-                diff = np.subtract(X[n],mu[k])
-                second= 0.5*np.dot(diff,x)
-                third = np.log(prior[k])
-                delta[k]=-first-second+third
-
-                if maxDelta is None or delta[k]>maxDelta :
+                delta[k]=-0.5*lnDetSigma-0.5*np.dot((X[n]-mu[k]),x)+np.log(prior[k])
+                if delta[k]>maxDelta:
                     maxDelta = delta[k]
                     maxClass = k
             h[n] = maxClass
+            #h[n] = np.where(delta,max(delta)) 
+    #print h 
     return h
 
 
@@ -245,14 +236,13 @@ def classifyBoost(X,priors,mus,sigmas,alphas,covdiag=True):
 
 # ## Define our testing function
 #
-# The function below, `testClassifier`, will be used to try out the different datasets. 
-# `fetchDataset` can be provided with any of the dataset arguments `wine`, `iris`, `olivetti` and `vowel`. 
-# Observe that we split the data into a **training** and a **testing** set.
+# The function below, `testClassifier`, will be used to try out the different datasets. `fetchDataset` can be provided with any of the dataset arguments `wine`, `iris`, `olivetti` and `vowel`. Observe that we split the data into a **training** and a **testing** set.
+
 np.set_printoptions(threshold=np.nan)
 np.set_printoptions(precision=25)
 np.set_printoptions(linewidth=200)
 
-def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=100):
+def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=20):
 
     X,y,pcadim = fetchDataset(dataset)
 
@@ -279,9 +269,10 @@ def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covd
             yPr = classifyBoost(xTe,priors,mus,sigmas,alphas,covdiag=covdiag)
         else:
         ## Simple
-            # Compute params
+            # Compute params 
+
             prior = computePrior(yTr)
-            mu, sigma = mlParams(xTr,yTr)
+            mu, sigma = mlParams(xTr,yTr)#Added W for boosting
             # Predict
             yPr = classify(xTe,prior,mu,sigma,covdiag=covdiag)
 
@@ -289,7 +280,8 @@ def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covd
         print "Trial:",trial,"Accuracy",100*np.mean((yPr==yTe).astype(float))
 
         means[trial] = 100*np.mean((yPr==yTe).astype(float))
-
+    global results 
+    results= "Final mean classification accuracy ", np.mean(means), "with standard deviation", np.std(means)
     print "Final mean classification accuracy ", np.mean(means), "with standard deviation", np.std(means)
 
 
@@ -297,6 +289,7 @@ def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covd
 #
 # This is some code that you can use for plotting the decision boundary
 # boundary in the last part of the lab.
+
 def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True):
 
     X,y,pcadim = fetchDataset(dataset)
@@ -316,8 +309,9 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
     else:
         ## Simple
         # Compute params
+        
         prior = computePrior(yTr)
-        mu, sigma = mlParams(xTr,yTr)
+        mu, sigma = mlParams(xTr,yTr) #Added W for boosting
 
     xRange = np.arange(np.min(pX[:,0]),np.max(pX[:,0]),np.abs(np.max(pX[:,0])-np.min(pX[:,0]))/100.0)
     yRange = np.arange(np.min(pX[:,1]),np.max(pX[:,1]),np.abs(np.max(pX[:,1])-np.min(pX[:,1]))/100.0)
@@ -351,18 +345,16 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
     plt.ylim(np.min(pX[:,1]),np.max(pX[:,1]))
     plt.show()
 
+
 # ## Run some experiments
 #
 # Call the `testClassifier` and `plotBoundary` functions for this part.
 
 # Example usage of the functions
-#dataset = raw_input("datset?: ")
-#doboost = raw_input("doboost?: ")
+#dataset = raw_input("data,covdiag?: ")
 #covdiag = raw_input("covdiag?: ")
-#name= dataset+str(doboost)+str(covdiag)+": "
-
-testClassifier(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=False)
-plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=False)
-#testClassifier(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
-#plotBoundary(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
-#print name+results
+#testClassifier(dataset=dataset,split=0.7,doboost=True,boostiter=5,covdiag=covdiag)
+#plotBoundary(dataset=dataset,split=0.7,doboost=True,boostiter=5,covdiag=covdiag)
+testClassifier(dataset='vowel',split=0.7,doboost=False,boostiter=5,covdiag=False)
+plotBoundary(dataset='vowel',split=0.7,doboost=False,boostiter=5,covdiag=False)
+print results

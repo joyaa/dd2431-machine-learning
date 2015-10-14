@@ -1,0 +1,13 @@
+
+20 trials
+
+olivettiTrueTrue: Final mean classification accuracy  6.375 with standard deviation 1.12654215288
+
+olivettiTrueFalse: Final mean classification accuracy  6.25 with standard deviation 1.0034662149
+
+olivettiFalseFalse: Final mean classification accuracy  26.4583333333 with standard deviation 5.07495894893
+
+
+olivettiFalseTrue:Final mean classification accuracy  6.41666666667 with standard deviation 1.23883906228
+
+

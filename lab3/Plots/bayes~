@@ -1,0 +1,18 @@
+20 trial, boostiter 5. setDoboostCovdiag
+irisFalseTrue: Final mean classification accuracy  95.6666666667 with standard deviation 2.67360209234
+irisFalseFalse:Final mean classification accuracy  95.7777777778 with standard deviation 2.61996136057
+irisTrueFalse: Final mean classification accuracy  91.2222222222 with standard deviation 4.24409538995
+irisTrueTrue:  Final mean classification accuracy  94.4444444444 with standard deviation 3.478327965
+
+vowelTrueFalse:Final mean classification accuracy  42.3376623377 with standard deviation 1.13589971978
+vowelTrueTrue: Final mean classification accuracy  34.1883116883 with standard deviation 3.43772759102
+vowelFalseFalse:Final mean classification accuracy  88.4415584416 with standard deviation 2.86451233768
+vowelFalseTrue: Final mean classification accuracy  54.3831168831 with standard deviation 4.83700858478
+
+
+olivettiTrueTrue: Final mean classification accuracy  6.375 with standard deviation 1.12654215288
+olivettiTrueFalse: Final mean classification accuracy  6.25 with standard deviation 1.0034662149
+olivettiFalseFalse: Final mean classification accuracy  26.4583333333 with standard deviation 5.07495894893
+olivettiFalseTrue:Final mean classification accuracy  6.41666666667 with standard deviation 1.23883906228
+
+

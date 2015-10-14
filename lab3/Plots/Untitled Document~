@@ -1,0 +1,11 @@
+20 trials
+irisFalseTrue: Final mean classification accuracy  95.0 with standard deviation 2.71029131503
+irisFalseFalse:Final mean classification accuracy  95.7777777778 with standard deviation 2.61996136057
+
+20 trials
+olivettiFalseTrue
+olivettiFalseFalse: Final mean classification accuracy  26.4583333333 with standard deviation 5.07495894893
+olivettiFalseFalse
+
+
+
