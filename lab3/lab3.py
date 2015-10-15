@@ -278,7 +278,7 @@ np.set_printoptions(threshold=np.nan)
 np.set_printoptions(precision=25)
 np.set_printoptions(linewidth=200)
 
-def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=5):
+def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=100):
 
     X,y,pcadim = fetchDataset(dataset)
 
@@ -387,8 +387,8 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
 #covdiag = raw_input("covdiag?: ")
 #name= dataset+str(doboost)+str(covdiag)+": "
 
-testClassifier(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=True)
-plotBoundary(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=True)
+testClassifier(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=False)
+plotBoundary(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=False)
 #testClassifier(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #plotBoundary(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #print name+results

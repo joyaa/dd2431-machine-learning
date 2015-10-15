@@ -94,3 +94,19 @@ dataset: olivetti, covdiag: True, boost: True
 Final mean classification accuracy: 61.0
 Standard deviation: 4.31083905213
 
+dataset: vowel, covdiag: False, boost: False
+Final mean classification accuracy: 9.09090909091
+Standard deviation: 0.0
+
+dataset: vowel, covdiag: False, boost: True
+Final mean classification accuracy: 79.5454545455
+Standard deviation: 23.9050131613
+
+dataset: vowel, covdiag: True, boost: False
+Final mean classification accuracy: 9.09090909091
+Standard deviation: 0.0
+
+dataset: vowel, covdiag: True, boost: True
+Final mean classification accuracy: 50.974025974
+Standard deviation: 11.9848740898
+
