@@ -1,0 +1,68 @@
+dataset: vowel, covdiag: False, boost: False
+Final mean classification accuracy: 88.4415584416
+Standard deviation: 2.14973316328
+
+dataset: vowel, covdiag: True, boost: False
+Final mean classification accuracy: 62.3376623377
+Standard deviation: 2.49810182619
+
+dataset: vowel, covdiag: False, boost: True
+Final mean classification accuracy: 80.9090909091
+Standard deviation: 1.20436603838
+
+dataset: vowel, covdiag: True, boost: True
+Final mean classification accuracy: 64.4155844156
+Standard deviation: 3.3465191498
+_________________________________________________
+dataset: iris, covdiag: False, boost: False
+Final mean classification accuracy: 96.0
+Standard deviation: 1.66295883857
+
+dataset: iris, covdiag: True, boost: False
+Final mean classification accuracy: 94.2222222222
+Standard deviation: 2.66666666667
+
+dataset: iris, covdiag: True, boost: True
+Final mean classification accuracy: 90.2222222222
+Standard deviation: 3.32591767713
+
+dataset: iris, covdiag: False, boost: True
+Final mean classification accuracy: 89.7777777778
+Standard deviation: 4.12160822022
+_________________________________________________
+dataset: olivetti, covdiag: False, boost: False
+Final mean classification accuracy: 27.3333333333
+Standard deviation: 3.88730126323
+
+dataset: olivetti, covdiag: True, boost: False
+Final mean classification accuracy: 57.8333333333
+Standard deviation: 3.10017920629
+
+dataset: olivetti, covdiag: False, boost: True
+Final mean classification accuracy: 3.5
+Standard deviation: 0.623609564462
+
+dataset: olivetti, covdiag: True, boost: True
+Final mean classification accuracy: 54.6666666667
+Standard deviation: 6.38139657303
+_________________________________________________
+dataset: wine, covdiag: False, boost: False
+Final mean classification accuracy: 57.358490566
+Standard deviation: 4.06427532614
+
+dataset: wine, covdiag: True, boost: False
+Final mean classification accuracy: 98.1132075472
+Standard deviation: 1.19331232459
+
+dataset: wine, covdiag: False, boost: True
+Final mean classification accuracy: 35.4716981132
+Standard deviation: 1.41194618369
+
+dataset: wine, covdiag: True, boost: True
+Final mean classification accuracy: 91.6981132075
+Standard deviation: 2.55936980495
+
+dataset: wine, covdiag: True, boost: True
+Final mean classification accuracy: 92.4528301887
+Standard deviation: 3.1572076473
+

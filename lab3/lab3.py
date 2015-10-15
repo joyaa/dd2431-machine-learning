@@ -183,7 +183,7 @@ def trainBoost(X,labels,T=5,covdiag=True):
     C =len(set(labels))
     N = len(labels)
     d = len(X[0])
-    weights = np.ones(len(labels))/len(labels)
+    weights = np.ones(N)/N
     
     priors = np.zeros([T,C])
     mus = np.zeros([T,C,d])
@@ -195,19 +195,25 @@ def trainBoost(X,labels,T=5,covdiag=True):
         prior = computePrior(labels,weights)
         mu, sigma = mlParams(X,labels,weights)
         h = classify(X,prior,mu,sigma,covdiag)
+        alpha = 0
 
         for j in range(N):
             if h[j] == labels[j]:
                 delta[j]=1
-  
+    
         e=np.sum(np.dot(weights,(1-delta)))
+
+
+        if e == 0:
+            e = 0.000000001
+
         alpha = 0.5*(np.log(1-e)-np.log(e))
 
-        for k in range(N):
-            if delta[k] == 1:
-                weights[k] *= np.exp(-alpha)
+        for n in range(N):
+            if h[n] == labels[n]:#delta[n] == 1:
+                weights[n] *= np.exp(-alpha)
             else:
-                weights[k] *= np.exp(alpha)
+                weights[n] *= np.exp(alpha)
 
         weights/=np.sum(weights)        
         priors[i] = prior
@@ -256,7 +262,6 @@ def classifyBoost(X,priors,mus,sigmas,alphas,covdiag=True):
     for t in range(T):
         h = classify(X,priors[t],mus[t],sigmas[t],covdiag)
         for n in range(N):
-
             votes[n][h[n]] += alphas[t]
     
     H=np.zeros(N)
@@ -278,7 +283,9 @@ np.set_printoptions(threshold=np.nan)
 np.set_printoptions(precision=25)
 np.set_printoptions(linewidth=200)
 
-def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=100):
+resultfile = "results.txt"
+
+def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=5):
 
     X,y,pcadim = fetchDataset(dataset)
 
@@ -317,6 +324,12 @@ def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covd
         means[trial] = 100*np.mean((yPr==yTe).astype(float))
 
     print "Final mean classification accuracy ", np.mean(means), "with standard deviation", np.std(means)
+
+    with open(resultfile, 'a') as result:
+        result.write('dataset: ' + dataset + ', covdiag: ' + str(covdiag) + ', doboost: ' + str(doboost) + '\n')
+        result.write('Final mean classification accuracy: ' + str(np.mean(means)) + '\n')
+        result.write('Standard deviation: ' + str(np.std(means)) + '\n')
+        result.write('\n')
 
 
 # ## Plotting the decision boundary
@@ -375,6 +388,7 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
 
     plt.xlim(np.min(pX[:,0]),np.max(pX[:,0]))
     plt.ylim(np.min(pX[:,1]),np.max(pX[:,1]))
+    plt.suptitle('dataset: ' + dataset + ', covdiag: ' + str(covdiag) + ', boost: ' + str(doboost))
     plt.show()
 
 # ## Run some experiments
@@ -387,8 +401,8 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
 #covdiag = raw_input("covdiag?: ")
 #name= dataset+str(doboost)+str(covdiag)+": "
 
-testClassifier(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=False)
-plotBoundary(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=False)
+testClassifier(dataset='wine',split=0.7,doboost=True,boostiter=5,covdiag=True)
+plotBoundary(dataset='wine',split=0.7,doboost=True,boostiter=5,covdiag=True)
 #testClassifier(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #plotBoundary(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #print name+results

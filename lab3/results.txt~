@@ -1,0 +1,33 @@
+dataset: vowel, covdiag: False, boost: False
+Final mean classification accuracy: 88.4415584416
+Standard deviation: 2.14973316328
+
+dataset: vowel, covdiag: True, boost: False
+Final mean classification accuracy: 62.3376623377
+Standard deviation: 2.49810182619
+
+dataset: vowel, covdiag: False, boost: True
+Final mean classification accuracy: 80.9090909091
+Standard deviation: 1.20436603838
+
+dataset: vowel, covdiag: True, boost: True
+Final mean classification accuracy: 64.4155844156
+Standard deviation: 3.3465191498
+_________________________________________________
+dataset: iris, covdiag: False, boost: False
+Final mean classification accuracy: 96.0
+Standard deviation: 1.66295883857
+
+dataset: iris, covdiag: True, boost: False
+Final mean classification accuracy: 94.2222222222
+Standard deviation: 2.66666666667
+
+dataset: iris, covdiag: True, boost: True
+Final mean classification accuracy: 90.2222222222
+Standard deviation: 3.32591767713
+
+dataset: iris, covdiag: False, boost: True
+Final mean classification accuracy: 89.7777777778
+Standard deviation: 4.12160822022
+
+
