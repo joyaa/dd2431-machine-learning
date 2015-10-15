@@ -54,7 +54,7 @@ def computePrior(labels,W=None):
 #      sigma - d x d x C matrix of class covariances
 def mlParams(X,labels,W=None):  #3.4 Assignment 1
     i = 0
-    d = X[0].size
+    d = len(X[0])
     N = len(labels)
     C = len(set(labels))
     if W is None:
@@ -84,11 +84,11 @@ def mlParams(X,labels,W=None):  #3.4 Assignment 1
                 #W[x] added to n_k and sigma
                 n_k += W[x]
                 diff = np.subtract(X[x],mu[k])
-                #for d1 in range(len(diff)):
-                #    for d2 in range(len(diff)):
-                #        sigma[d1][d2][k] += diff[d1]*diff[d2]                   
+                for d1 in range(len(diff)):
+                    for d2 in range(len(diff)):
+                        sigma[d1][d2][k] += diff[d1]*diff[d2]*W[x]                   
                 #sigma[:,:,k] = sigma[:,:,k]+W[x]*sigma[:,:,k]
-                sigma[:,:,k] = sigma[:,:,k]+W[x]*np.outer(np.transpose(diff),diff)
+                #sigma[:,:,k] = sigma[:,:,k]+W[x]*np.outer(np.transpose(diff),diff)
         sigma[:,:,k] /= n_k 
 
     #sigma
@@ -106,7 +106,7 @@ def classify(X,prior,mu,sigma,covdiag=True):
     N = X[:,0].size
     delta=np.zeros(C)
     h=np.zeros(N)
-    d = len(sigma[:,:,0])
+    dd = len(sigma[:,:,0])
     
     if covdiag:
         for n in range(N):
@@ -124,7 +124,7 @@ def classify(X,prior,mu,sigma,covdiag=True):
 
                 delta[k]=-first-second+third
                 
-                if maxDelta is None or delta[k]>maxDelta :
+                if maxDelta == 0 or delta[k]>maxDelta :
                     maxDelta = delta[k]
                     maxClass = k
             h[n] = maxClass
@@ -135,7 +135,7 @@ def classify(X,prior,mu,sigma,covdiag=True):
             maxClass = 0
             for k in range(C):
                 A = sigma[:,:,k]
-                b = np.transpose(X[n]-mu[k])
+                b = np.transpose(np.subtract(X[n],mu[k]))
 
                 L = np.linalg.cholesky(A)
                 y = np.linalg.solve(L,b)
@@ -143,7 +143,7 @@ def classify(X,prior,mu,sigma,covdiag=True):
                 Lh = L.T.conj()
                 x = np.linalg.solve(Lh,y) #np.transpose(L)
 
-                first = 0.5*2*np.sum(np.log(np.diag(L)))
+                first = 0.5*2*np.log(np.linalg.det(L))#np.sum(np.log(np.diag(L)))
                 diff = np.subtract(X[n],mu[k])
                 second= 0.5*np.dot(diff,x)
                 third = np.log(prior[k])
@@ -181,34 +181,40 @@ mu, sigma = mlParams(X,labels,W)
 def trainBoost(X,labels,T=5,covdiag=True):
     # Your code here
     C =len(set(labels))
+    N = len(labels)
     d = len(X[0])
     weights = np.ones(len(labels))/len(labels)
     
     priors = np.zeros([T,C])
     mus = np.zeros([T,C,d])
     sigmas = np.zeros([T,d,d,C])
-    alphas = np.zeros([T,C])
+    alphas = np.zeros(T)
+
     for i in range(T):
         delta = np.zeros(len(labels))
         prior = computePrior(labels,weights)
         mu, sigma = mlParams(X,labels,weights)
         h = classify(X,prior,mu,sigma,covdiag)
-        for j in range(len(labels)):
+
+        for j in range(N):
             if h[j] == labels[j]:
                 delta[j]=1
   
         e=np.sum(np.dot(weights,(1-delta)))
         alpha = 0.5*(np.log(1-e)-np.log(e))
-        for k in range(len(labels)):
+
+        for k in range(N):
             if delta[k] == 1:
                 weights[k] *= np.exp(-alpha)
             else:
                 weights[k] *= np.exp(alpha)
+
         weights/=np.sum(weights)        
         priors[i] = prior
         mus[i] = mu
         sigmas[i] = sigma
         alphas[i] = alpha
+
 
     #print np.shape(mus[0])
 
@@ -224,22 +230,42 @@ def classifyBoost(X,priors,mus,sigmas,alphas,covdiag=True):
     # Your code here
    
     #c=np.zeros(len(mus))
-    H=np.zeros(len(X))
-    #print np.shape(alphas)
-    C=len(mus[:,0]) #number of classes
-    for i in range(len(X)):
-        bestC=0
-        votes = np.zeros(C)
-        #c=np.zeros(len(mus))
-        for j in range(C):
-            for k in range(len(mus)):  #T hypothesis
-                h = classify(np.atleast_2d(X[i]),priors[k],mus[k],sigmas[k],covdiag)
-                if j == h:
-                    votes[j]+=alphas[k][j]
-            if votes[j] == max(votes): #segt med max varje gång
-                bestC = j
+    N = len(X)
+    
+    T = len(mus)
 
-        H[i] = bestC
+    C=len(mus[0,:]) #number of classes
+    # for i in range(N):
+    #     bestC=0
+    #     votes = np.zeros(C)
+    #     #c=np.zeros(len(mus))
+    #     for t in range(C):
+    #         for k in range(T):  #T hypothesis
+    #             h = classify(np.atleast_2d(X[i]),priors[t],mus[t],sigmas[t],covdiag)
+    #             if t == h:
+    #                 votes[t]+=alphas[t]
+    #         if votes[t] == max(votes): #segt med max varje gång
+    #             bestC = t
+
+    #     H[i] = bestC
+
+    bestC=0
+    votes = np.zeros([N,C])
+    #c=np.zeros(len(mus))
+
+    for t in range(T):
+        h = classify(X,priors[t],mus[t],sigmas[t],covdiag)
+        for n in range(N):
+
+            votes[n][h[n]] += alphas[t]
+    
+    H=np.zeros(N)
+    for n in range(N):
+        bestC = 0
+        for c in range(C):
+            if votes[n][c] > bestC:
+                bestC = c
+        H[n] = bestC
     return H
 
 
@@ -252,7 +278,7 @@ np.set_printoptions(threshold=np.nan)
 np.set_printoptions(precision=25)
 np.set_printoptions(linewidth=200)
 
-def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=100):
+def testClassifier(dataset='iris',dim=0,split=0.7,doboost=False,boostiter=5,covdiag=True,ntrials=5):
 
     X,y,pcadim = fetchDataset(dataset)
 
@@ -361,8 +387,8 @@ def plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=True
 #covdiag = raw_input("covdiag?: ")
 #name= dataset+str(doboost)+str(covdiag)+": "
 
-testClassifier(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=False)
-plotBoundary(dataset='iris',split=0.7,doboost=False,boostiter=5,covdiag=False)
+testClassifier(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=True)
+plotBoundary(dataset='vowel',split=0.7,doboost=True,boostiter=5,covdiag=True)
 #testClassifier(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #plotBoundary(dataset=dataset,split=0.7,doboost=doboost,boostiter=5,covdiag=covdiag)
 #print name+results
